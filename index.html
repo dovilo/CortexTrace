@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CortexTrace — AI Agent Observability & Debugging Platform</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#07070c;--s1:#0c0c14;--s2:#121228;--s3:#1a1a36;--bd:#1f1f40;--tx:#e4e4f0;--tx2:#6e6e9a;--ac:#8b5cf6;--ac2:#a78bfa;--ac3:#c4b5fd;--gn:#10b981;--gn2:#34d399;--or:#f59e0b;--rd:#ef4444;--cy:#06b6d4;--pk:#ec4899;--bl:#3b82f6}
+body{background:var(--bg);color:var(--tx);font-family:'Inter',system-ui,-apple-system,sans-serif;overflow-x:hidden;line-height:1.7}
+a{color:var(--ac2);text-decoration:none}
+.ct{max-width:1200px;margin:0 auto;padding:0 24px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(7,7,12,.88);backdrop-filter:blur(20px);border-bottom:1px solid rgba(31,31,64,.5)}
+nav .in{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1200px;margin:0 auto}
+.logo{font-size:1.35rem;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
+.logo .ic{width:26px;height:26px;background:linear-gradient(135deg,var(--ac),var(--cy));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.nl{display:flex;gap:26px;list-style:none}
+.nl a{color:var(--tx2);font-size:.83rem;font-weight:500;transition:color .2s}
+.nl a:hover{color:var(--tx)}
+.nc{padding:8px 16px;background:var(--ac);border:none;border-radius:7px;color:#fff;font-weight:600;font-size:.82rem;cursor:pointer;transition:all .2s}
+.nc:hover{box-shadow:0 0 24px rgba(139,92,246,.35)}
+
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 25%,rgba(139,92,246,.07) 0%,transparent 60%),radial-gradient(ellipse at 25% 70%,rgba(6,182,212,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 55%,rgba(236,72,153,.03) 0%,transparent 50%)}
+.hero-c{position:relative;z-index:1}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.25);border-radius:20px;font-size:.73rem;color:var(--ac2);margin-bottom:18px;font-weight:500}
+.badge .lv{width:6px;height:6px;background:var(--gn);border-radius:50%;animation:lp 2s infinite}
+@keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.hero h1{font-size:clamp(2rem,5vw,3.8rem);font-weight:900;line-height:1.08;margin-bottom:18px;letter-spacing:-.03em}
+.hero h1 .gr{background:linear-gradient(135deg,var(--ac2),var(--cy),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.05rem;color:var(--tx2);max-width:540px;margin:0 auto 34px;line-height:1.7}
+.btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{padding:11px 26px;border-radius:9px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:7px}
+.bp{background:linear-gradient(135deg,var(--ac),#6d28d9);color:#fff;box-shadow:0 4px 22px rgba(139,92,246,.22)}
+.bp:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(139,92,246,.38)}
+.bo{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.bo:hover{border-color:var(--ac);background:rgba(139,92,246,.04)}
+
+.trace-sec{padding:40px 0 80px}
+.tw{position:relative;max-width:1000px;margin:0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+canvas#tc{width:100%;display:block;aspect-ratio:16/9}
+.tov{position:absolute;top:14px;left:14px;display:flex;gap:7px;flex-wrap:wrap}
+.tch{padding:5px 11px;background:rgba(7,7,12,.72);border:1px solid var(--bd);border-radius:7px;font-size:.72rem;color:var(--tx2);backdrop-filter:blur(6px);display:flex;align-items:center;gap:4px}
+.tch .d{width:5px;height:5px;border-radius:50%}
+.tc{display:flex;gap:9px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.tcb{padding:7px 14px;background:var(--s2);border:1px solid var(--bd);border-radius:7px;color:var(--tx2);cursor:pointer;font-size:.78rem;transition:all .2s}
+.tcb:hover,.tcb.a{border-color:var(--ac);color:var(--ac2);background:rgba(139,92,246,.07)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;padding:60px 0}
+.st{text-align:center;padding:22px 14px;background:var(--s1);border:1px solid var(--bd);border-radius:11px;transition:all .3s}
+.st:hover{border-color:var(--ac);transform:translateY(-2px)}
+.st .n{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--ac2),var(--cy));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.st .l{color:var(--tx2);font-size:.78rem;margin-top:2px}
+
+.feat{padding:80px 0}
+.feat h2,.arch h2,.comp h2,.api h2{text-align:center;font-size:1.9rem;margin-bottom:7px;font-weight:800;letter-spacing:-.02em}
+.feat .su,.arch .su,.comp .su,.api .su{text-align:center;color:var(--tx2);margin-bottom:38px;font-size:.92rem}
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.f{padding:26px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;transition:all .3s}
+.f:hover{border-color:var(--ac);transform:translateY(-2px)}
+.f .ic{font-size:1.7rem;margin-bottom:11px}
+.f h3{font-size:.92rem;margin-bottom:5px;font-weight:700}
+.f p{color:var(--tx2);font-size:.82rem}
+
+.arch{padding:80px 0}
+.ab{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:30px;max-width:800px;margin:0 auto;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.78rem;color:var(--cy);line-height:1.8;white-space:pre;overflow-x:auto}
+
+.comp{padding:80px 0}
+.ct2{width:100%;max-width:800px;margin:0 auto;border-collapse:collapse}
+.ct2 th,.ct2 td{padding:11px 15px;text-align:left;border-bottom:1px solid var(--bd);font-size:.82rem}
+.ct2 th{color:var(--tx2);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}
+.ct2 .y{color:var(--gn)}
+.ct2 .no{color:var(--rd);opacity:.4}
+.ct2 .hl{color:var(--ac2);font-weight:700}
+
+.api{padding:80px 0}
+.ab2{background:var(--s1);border:1px solid var(--bd);border-radius:12px;max-width:700px;margin:0 auto;overflow:hidden}
+.ah{padding:11px 15px;background:var(--s2);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:7px}
+.ad{width:7px;height:7px;border-radius:50%}
+.ab3{padding:18px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:.78rem;line-height:1.8;overflow-x:auto}
+.ab3 .kw{color:var(--ac2)}.ab3 .st{color:var(--gn2)}.ab3 .cm{color:var(--tx2)}.ab3 .nm{color:var(--or)}
+
+.replay{padding:80px 0}
+.replay h2{text-align:center;font-size:1.9rem;margin-bottom:7px;font-weight:800;letter-spacing:-.02em}
+.replay .su{text-align:center;color:var(--tx2);margin-bottom:38px;font-size:.92rem}
+.rp-wrap{max-width:800px;margin:0 auto;background:var(--s1);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.rp-header{padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.rp-header h3{font-size:.88rem;font-weight:700}
+.rp-controls{display:flex;gap:8px}
+.rp-btn{padding:5px 12px;background:var(--s3);border:1px solid var(--bd);border-radius:6px;color:var(--tx2);cursor:pointer;font-size:.75rem;transition:all .2s}
+.rp-btn:hover,.rp-btn.a{border-color:var(--ac);color:var(--ac2)}
+.rp-body{padding:18px}
+.rp-step{display:flex;gap:14px;padding:12px;border-left:2px solid var(--bd);margin-bottom:10px;transition:all .3s;opacity:.5}
+.rp-step.a{opacity:1;border-left-color:var(--ac);background:rgba(139,92,246,.04);border-radius:0 8px 8px 0}
+.rp-step .num{width:28px;height:28px;background:var(--s3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:var(--tx2);flex-shrink:0}
+.rp-step.a .num{background:var(--ac);color:#fff}
+.rp-step .info h4{font-size:.82rem;margin-bottom:2px}
+.rp-step .info p{font-size:.75rem;color:var(--tx2)}
+.rp-step .meta{margin-left:auto;text-align:right;font-size:.7rem;color:var(--tx2);flex-shrink:0}
+.rp-step .meta .tok{color:var(--or)}
+.rp-step .meta .lat{color:var(--cy)}
+
+footer{padding:46px 0 28px;border-top:1px solid var(--bd);text-align:center}
+footer .lk{display:flex;justify-content:center;gap:26px;margin-bottom:14px;flex-wrap:wrap}
+footer .cp{color:var(--tx2);font-size:.78rem}
+
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .5s ease,transform .5s ease}
+.reveal.vis{opacity:1;transform:translateY(0)}
+
+@media(max-width:768px){
+.nl{display:none}
+.stats{grid-template-columns:repeat(2,1fr)}
+.fg{grid-template-columns:1fr}
+.ct2 th,.ct2 td{padding:7px 9px;font-size:.72rem}
+}
+</style>
+</head>
+<body>
+<nav><div class="in">
+<div class="logo"><div class="ic">📡</div>CortexTrace</div>
+<ul class="nl">
+<li><a href="#features">Features</a></li>
+<li><a href="#replay">Replay</a></li>
+<li><a href="#api">API</a></li>
+<li><a href="#compare">Compare</a></li>
+</ul>
+<button class="nc" onclick="document.getElementById('trace').scrollIntoView({behavior:'smooth'})">View Traces</button>
+</div></nav>
+
+<section class="hero"><div class="hero-c">
+<div class="badge"><span class="lv"></span>Powered by Xiaomi MiMo v2.5-pro</div>
+<h1>See How Your AI Agent<br><span class="gr">Really Thinks</span></h1>
+<p>Real-time observability for AI agents. Flame graphs, token waterfalls, cost attribution, reasoning path trees, and step-by-step replay.</p>
+<div class="btns">
+<button class="btn bp" onclick="document.getElementById('trace').scrollIntoView({behavior:'smooth'})">📡 View Live Traces</button>
+<a href="https://github.com/dovilo/CortexTrace" class="btn bo">GitHub →</a>
+</div>
+</div></section>
+
+<section class="trace-sec" id="trace"><div class="ct">
+<div class="tw">
+<canvas id="tc"></canvas>
+<div class="tov">
+<div class="tch"><span class="d" style="background:var(--gn)"></span> <span id="spanCnt">0</span> Active Spans</div>
+<div class="tch"><span class="d" style="background:var(--cy)"></span> <span id="tokCnt">0</span> Tokens Traced</div>
+<div class="tch"><span class="d" style="background:var(--ac2)"></span> <span id="costVal">$0.00</span> Cost</div>
+</div>
+</div>
+<div class="tc">
+<button class="tcb a" onclick="togTrace(this)">▶ Live Trace</button>
+<button class="tcb" onclick="newTrace()">+ New Trace</button>
+<button class="tcb" onclick="resetTrace()">↺ Reset</button>
+</div>
+</div></section>
+
+<section class="ct">
+<div class="stats">
+<div class="st reveal"><div class="n" data-target="6">0</div><div class="l">Trace Visualizations</div></div>
+<div class="st reveal"><div class="n" data-target="50">0</div><div class="l">ms Trace Latency</div></div>
+<div class="st reveal"><div class="n" data-target="100">0</div><div class="l">K Spans/sec</div></div>
+<div class="st reveal"><div class="n" data-target="99">0</div><div class="l">% Error Detection</div></div>
+</div>
+</section>
+
+<section class="feat" id="features"><div class="ct">
+<h2 class="reveal">6 Observability Tools</h2>
+<p class="su reveal">Everything to understand, debug, and optimize your AI agents.</p>
+<div class="fg">
+<div class="f reveal"><div class="ic">🔥</div><h3>Reasoning Flame Graph</h3><p>Visualize time spent in each reasoning step. Identify bottlenecks in chain-of-thought at a glance.</p></div>
+<div class="f reveal"><div class="ic">💧</div><h3>Token Waterfall</h3><p>See token flow through each node — input tokens, output tokens, cache hits. Real-time streaming.</p></div>
+<div class="f reveal"><div class="ic">💰</div><h3>Cost Attribution</h3><p>Track cost per reasoning step, per tool call, per agent. Breakdown by model, token type, and time.</p></div>
+<div class="f reveal"><div class="ic">🌳</div><h3>Reasoning Path Tree</h3><p>Interactive tree of agent decision paths. Expand branches, see alternatives considered, trace logic.</p></div>
+<div class="f reveal"><div class="ic">🐛</div><h3>Error Tracking</h3><p>Capture errors with full context — prompt, model state, tool responses. Stack traces for AI reasoning.</p></div>
+<div class="f reveal"><div class="ic">🔄</div><h3>Step-by-Step Replay</h3><p>Replay any agent run from start to finish. Scrub timeline, inspect state at each decision point.</p></div>
+</div>
+</div></section>
+
+<section class="replay" id="replay"><div class="ct">
+<h2 class="reveal">Step-by-Step Replay</h2>
+<p class="su reveal">Watch any agent run from start to finish. Scrub, pause, inspect.</p>
+<div class="rp-wrap reveal">
+<div class="rp-header">
+<h3>Trace #A7X2 — Research Agent</h3>
+<div class="rp-controls">
+<button class="rp-btn a" id="rpPlay" onclick="toggleReplay()">▶ Play</button>
+<button class="rp-btn" onclick="stepReplay(-1)">◀</button>
+<button class="rp-btn" onclick="stepReplay(1)">▶</button>
+</div>
+</div>
+<div class="rp-body" id="rpBody"></div>
+</div>
+</div></section>
+
+<section class="arch"><div class="ct">
+<h2 class="reveal">Architecture</h2>
+<div class="ab reveal">
+┌───────────────────────────────────────────────────────────────┐
+│                    CortexTrace Platform                        │
+├───────────────┬───────────────┬───────────────────────────────┤
+│  Trace        │  Visualize    │  Analyze                      │
+│  Collector    │  Engine       │  Engine                       │
+│               │               │                               │
+│  ┌─────────┐  │  ┌─────────┐  │  ┌─────────────────────────┐  │
+│  │OpenTelem│  │  │Flame    │  │  │  Cost Attribution       │  │
+│  │etry SDK │──┼──│Graph    │──┼──│  per-step, per-model    │  │
+│  │per-agent│  │  │Renderer │  │  │  token breakdown        │  │
+│  └─────────┘  │  └─────────┘  │  └─────────────────────────┘  │
+│               │               │                               │
+│  ┌─────────┐  │  ┌─────────┐  │  ┌─────────────────────────┐  │
+│  │Span     │  │  │Token    │  │  │  Error Detection        │  │
+│  │Collector│──┼──│Waterfall│──┼──│  anomaly scoring        │  │
+│  │auto-time│  │  │Renderer │  │  │  context capture        │  │
+│  └─────────┘  │  └─────────┘  │  └─────────────────────────┘  │
+├───────────────┴───────────────┴───────────────────────────────┤
+│  MiMo v2.5-pro │ 128K Context │ JSON Mode │ Chain-of-Thought  │
+├───────────────────────────────────────────────────────────────┤
+│  Replay Engine │ Alert System │ API Gateway │ Team Sharing      │
+└───────────────────────────────────────────────────────────────┘
+</div>
+</div></section>
+
+<section class="comp" id="compare"><div class="ct">
+<h2 class="reveal">How CortexTrace Compares</h2>
+<table class="ct2 reveal">
+<thead><tr><th>Feature</th><th class="hl">CortexTrace</th><th>LangSmith</th><th>Helicone</th><th>Weights&Biases</th></tr></thead>
+<tbody>
+<tr><td>Reasoning Flame Graph</td><td class="y">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+<tr><td>Token Waterfall</td><td class="y">✓</td><td class="no">✗</td><td class="y">✓</td><td class="no">✗</td></tr>
+<tr><td>Cost Attribution</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="no">✗</td></tr>
+<tr><td>Reasoning Path Tree</td><td class="y">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+<tr><td>Error Tracking</td><td class="y">✓</td><td class="y">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+<tr><td>Step-by-Step Replay</td><td class="y">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+<tr><td>MiMo Integration</td><td class="y">✓</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+<tr><td>Zero-Config Setup</td><td class="y">✓</td><td class="no">✗</td><td class="y">✓</td><td class="no">✗</td></tr>
+</tbody>
+</table>
+</div></section>
+
+<section class="api" id="api"><div class="ct">
+<h2 class="reveal">Simple API</h2>
+<p class="su reveal">3 lines to add observability to any AI agent.</p>
+<div class="ab2 reveal">
+<div class="ah"><span class="ad" style="background:var(--rd)"></span><span class="ad" style="background:var(--or)"></span><span class="ad" style="background:var(--gn)"></span><span style="color:var(--tx2);font-size:.78rem;margin-left:7px">Python SDK</span></div>
+<div class="ab3">
+<span class="cm"># Add tracing to any MiMo agent in 3 lines</span><br><br>
+<span class="kw">from</span> cortextrace <span class="kw">import</span> Tracer<br><br>
+tracer = Tracer(<span class="st">"my-agent"</span>, model=<span class="st">"mimo-v2.5-pro"</span>)<br><br>
+<span class="kw">with</span> tracer.span(<span class="st">"reasoning"</span>) <span class="kw">as</span> span:<br>
+&nbsp;&nbsp;response = mimo.chat(prompt)<br>
+&nbsp;&nbsp;span.log_tokens(response.usage)<br>
+&nbsp;&nbsp;span.log_cost(response.cost)<br>
+&nbsp;&nbsp;span.log_reasoning(response.chain_of_thought)<br><br>
+<span class="cm"># That's it. View traces at:</span><br>
+<span class="cm"># https://cortextrace.dev/dashboard</span>
+</div>
+</div>
+</div></section>
+
+<footer><div class="ct">
+<div class="lk"><a href="https://github.com/dovilo/CortexTrace">GitHub</a><a href="#features">Features</a><a href="#replay">Replay</a><a href="#api">API</a></div>
+<div class="cp">CortexTrace — Powered by Xiaomi MiMo v2.5-pro · MIT License · 2026</div>
+</div></footer>
+
+<script>
+// ===== TRACE CANVAS =====
+const cv=document.getElementById('tc'),cx=cv.getContext('2d');
+let tracing=true,tt=0,spans=[],tokens=[],totalTok=0,totalCost=0;
+
+const COLORS=['#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899','#3b82f6','#ef4444','#a78bfa'];
+const NAMES=['Input','Reason','Tool Call','Gate','Memory','Transform','Output','Sub-Agent'];
+
+function rcv(){const r=cv.parentElement.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;cv.style.width=r.width+'px';cv.style.height=r.height+'px';cx.setTransform(d,0,0,d,0,0)}
+
+function initSpans(){
+  spans=[];
+  const w=parseInt(cv.style.width),h=parseInt(cv.style.height);
+  for(let i=0;i<6;i++){
+    const sw=80+Math.random()*200;
+    spans.push({
+      x:30+(i%3)*(w/3-40),y:40+Math.floor(i/3)*140,
+      w:sw,h:28,type:i,color:COLORS[i],name:NAMES[i],
+      tokens:Math.floor(200+Math.random()*2000),
+      latency:Math.floor(50+Math.random()*500),
+      cost:(Math.random()*0.05).toFixed(4),
+      glow:0
+    });
+  }
+  totalTok=spans.reduce((a,s)=>a+s.tokens,0);
+  totalCost=spans.reduce((a,s)=>a+parseFloat(s.cost),0);
+}
+
+function drawSpan(s){
+  cx.save();
+  if(s.glow>0){cx.shadowColor=s.color;cx.shadowBlur=s.glow*16}
+  cx.fillStyle=s.color+'18';
+  cx.strokeStyle=s.color+(s.glow>0?'cc':'55');
+  cx.lineWidth=s.glow>0?2:1;
+  cx.beginPath();
+  const r=6;
+  cx.moveTo(s.x+r,s.y);cx.lineTo(s.x+s.w-r,s.y);cx.quadraticCurveTo(s.x+s.w,s.y,s.x+s.w,s.y+r);
+  cx.lineTo(s.x+s.w,s.y+s.h-r);cx.quadraticCurveTo(s.x+s.w,s.y+s.h,s.x+s.w-r,s.y+s.h);
+  cx.lineTo(s.x+r,s.y+s.h);cx.quadraticCurveTo(s.x,s.y+s.h,s.x,s.y+s.h-r);
+  cx.lineTo(s.x,s.y+r);cx.quadraticCurveTo(s.x,s.y,s.x+r,s.y);
+  cx.closePath();cx.fill();cx.stroke();
+  cx.shadowBlur=0;
+  cx.font='bold 10px sans-serif';cx.fillStyle=s.color;cx.textAlign='left';
+  cx.fillText(s.name,s.x+8,s.y+17);
+  cx.font='9px sans-serif';cx.fillStyle='#6e6e9a';cx.textAlign='right';
+  cx.fillText(s.latency+'ms · '+s.tokens+' tok',s.x+s.w-8,s.y+17);
+  cx.fillStyle=s.color+'30';
+  cx.fillRect(s.x+4,s.y+s.h-4,(s.w-8)*(s.latency/500),2);
+  cx.restore();
+}
+
+function spawnToken(){
+  if(spans.length<2)return;
+  const f=Math.floor(Math.random()*spans.length);
+  let t=Math.floor(Math.random()*spans.length);
+  while(t===f)t=Math.floor(Math.random()*spans.length);
+  tokens.push({sx:spans[f].x+spans[f].w/2,sy:spans[f].y+spans[f].h,ex:spans[t].x+spans[t].w/2,ey:spans[t].y,t:0,color:spans[f].color,sp:0.012+Math.random()*0.008});
+}
+
+function drawToken(p){
+  const x=p.sx+(p.ex-p.sx)*p.t,y=p.sy+(p.ey-p.sy)*p.t;
+  cx.beginPath();cx.arc(x,y,2.5,0,Math.PI*2);
+  cx.fillStyle=p.color;cx.shadowColor=p.color;cx.shadowBlur=8;cx.fill();cx.shadowBlur=0;
+}
+
+function animTrace(){
+  if(!tracing){requestAnimationFrame(animTrace);return}
+  const w=parseInt(cv.style.width),h=parseInt(cv.style.height);
+  cx.clearRect(0,0,w,h);tt++;
+  cx.fillStyle='rgba(31,31,64,.15)';
+  for(let gx=0;gx<w;gx+=40)for(let gy=0;gy<h;gy+=40){cx.beginPath();cx.arc(gx,gy,.4,0,Math.PI*2);cx.fill()}
+  if(tt%15===0)spawnToken();
+  spans.forEach(s=>{if(s.glow>0)s.glow-=.02;if(s.glow<=0)s.glow=0});
+  tokens=tokens.filter(p=>{p.t+=p.sp;if(p.t<1){drawToken(p);return true}return false});
+  if(tt%15===0&&spans.length>0){const si=Math.floor(Math.random()*spans.length);spans[si].glow=1}
+  spans.forEach(drawSpan);
+  if(tt%20===0){totalTok+=Math.floor(Math.random()*100);totalCost+=.0001+Math.random()*.001;
+    document.getElementById('spanCnt').textContent=spans.length;
+    document.getElementById('tokCnt').textContent=totalTok.toLocaleString();
+    document.getElementById('costVal').textContent='$'+totalCost.toFixed(4)}
+  requestAnimationFrame(animTrace);
+}
+
+function togTrace(b){tracing=!tracing;b.classList.toggle('a');b.textContent=tracing?'▶ Live Trace':'⏸ Paused'}
+function newTrace(){const w=parseInt(cv.style.width);spans.push({x:20+Math.random()*(w-200),y:30+Math.random()*250,w:80+Math.random()*180,h:28,type:spans.length%8,color:COLORS[spans.length%8],name:NAMES[spans.length%8],tokens:Math.floor(200+Math.random()*2000),latency:Math.floor(50+Math.random()*500),cost:(Math.random()*0.05).toFixed(4),glow:1})}
+function resetTrace(){tokens=[];totalTok=0;totalCost=0;initSpans()}
+
+// ===== REPLAY =====
+const RP_STEPS=[
+  {n:'Input Received',p:'User query: "Analyze DeFi portfolio risk"',tok:45,lat:'12ms'},
+  {n:'Reasoning Step 1',p:'MiMo chain-of-thought: parsing portfolio components...',tok:312,lat:'180ms'},
+  {n:'Tool Call: DeFi API',p:'Fetching on-chain positions across 3 protocols...',tok:89,lat:'340ms'},
+  {n:'Reasoning Step 2',p:'Risk scoring: IL exposure, liquidation thresholds...',tok:478,lat:'220ms'},
+  {n:'Gate: Risk Level',p:'Conditional: risk_score > 0.7 → high_risk path',tok:34,lat:'15ms'},
+  {n:'Reasoning Step 3',p:'Generating mitigation strategies for 5 positions...',tok:623,lat:'290ms'},
+  {n:'Tool Call: Price Feed',p:'Real-time price data for collateral assets...',tok:67,lat:'95ms'},
+  {n:'Transform: Report',p:'Structuring output as JSON risk report...',tok:156,lat:'65ms'},
+  {n:'Output Delivered',p:'Risk report: 3 high-risk, 2 medium positions identified',tok:234,lat:'28ms'},
+];
+let rpIdx=0,rpPlaying=false,rpInterval=null;
+
+function renderReplay(){
+  const body=document.getElementById('rpBody');
+  body.innerHTML=RP_STEPS.map((s,i)=>`
+    <div class="rp-step${i===rpIdx?' a':''}" onclick="rpIdx=${i};renderReplay()">
+      <div class="num">${i+1}</div>
+      <div class="info"><h4>${s.n}</h4><p>${s.p}</p></div>
+      <div class="meta"><div class="tok">${s.tok} tok</div><div class="lat">${s.lat}</div></div>
+    </div>
+  `).join('');
+}
+
+function toggleReplay(){
+  rpPlaying=!rpPlaying;
+  document.getElementById('rpPlay').textContent=rpPlaying?'⏸ Pause':'▶ Play';
+  document.getElementById('rpPlay').classList.toggle('a',rpPlaying);
+  if(rpPlaying){rpInterval=setInterval(()=>{rpIdx=(rpIdx+1)%RP_STEPS.length;renderReplay()},1200)}
+  else{clearInterval(rpInterval)}
+}
+
+function stepReplay(d){rpIdx=Math.max(0,Math.min(RP_STEPS.length-1,rpIdx+d));renderReplay()}
+
+// ===== COUNTERS =====
+function animCounters(){document.querySelectorAll('.st .n').forEach(el=>{const t=+el.dataset.target;let c=0;const s=t/40;const tm=setInterval(()=>{c+=s;if(c>=t){c=t;clearInterval(tm)}el.textContent=Math.round(c)},30)})}
+
+// ===== REVEAL =====
+const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('vis');if(el.target.querySelector('.n'))animCounters()}})},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ===== INIT =====
+window.addEventListener('resize',()=>{rcv();initSpans()});
+rcv();initSpans();animTrace();renderReplay();
+document.getElementById('spanCnt').textContent=spans.length;
+</script>
+</body>
+</html>
